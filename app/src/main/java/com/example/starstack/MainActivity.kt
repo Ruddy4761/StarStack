@@ -1,64 +1,200 @@
 package com.example.starstack
 
-
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.widget.EditText
-import android.widget.ImageView
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
+import com.example.starstack.adapters.MovieGridAdapter
+import com.example.starstack.databinding.ActivityMainBinding
+import com.example.starstack.firebase.FirebaseManager
+import com.example.starstack.models.Movie
+import com.google.android.material.chip.Chip
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityMainBinding
+    private val firebaseManager = FirebaseManager.getInstance()
+    private lateinit var adapter: MovieGridAdapter
+    
+    
+    private var allMovies = listOf<Movie>()
+    private var selectedGenres = mutableSetOf<String>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        // Find views
-        val recyclerView: RecyclerView = findViewById(R.id.recyclerView)
-        val searchBar: EditText = findViewById(R.id.searchBar)
-        val profileIcon: ImageView = findViewById(R.id.profileIcon)
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.title = "StarStack"
 
-        // RecyclerView layout
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        setupRecyclerView()
+        setupSearchBar()
+        setupGenreFilter()
+        setupSwipeRefresh()
 
-        // Movie list
-        val movies = listOf(
-            Movie("Inception", 4.8, "A thief who enters dreams to steal secrets from deep subconscious.", R.drawable.inception),
-            Movie("Interstellar", 4.7, "A team of explorers travel through a wormhole in space to ensure humanity's survival.", R.drawable.interstellar),
-            Movie("The Dark Knight", 4.9, "Batman faces the Joker, who wreaks havoc on Gotham City.", R.drawable.dark_knight),
-            Movie("Avengers: Endgame", 4.6, "The Avengers assemble for the final battle against Thanos.", R.drawable.endgame),
-            Movie("The Matrix", 4.7, "A hacker discovers the shocking truth about reality and fights against the system.", R.drawable.matrix),
-            Movie("Titanic", 4.5, "A tragic love story unfolds on the ill-fated Titanic.", R.drawable.titanic),
-            Movie("Avatar", 4.6, "A marine on an alien planet struggles between loyalty and morality.", R.drawable.avatar),
-            Movie("Spider-Man: No Way Home", 4.5, "Peter Parker faces villains from across the multiverse.", R.drawable.spiderman),
-            Movie("Joker", 4.4, "The story of Arthur Fleck and his transformation into the Joker.", R.drawable.joker),
-            Movie("Black Panther", 4.3, "T’Challa defends Wakanda as the Black Panther.", R.drawable.black_panther),
-            Movie("Gladiator", 4.6, "A former Roman General seeks revenge after being betrayed.", R.drawable.gladiator),
-            Movie("Shutter Island", 4.3, "A U.S. Marshal investigates a psychiatric facility on an isolated island.", R.drawable.shutter_island),
-            Movie("The Godfather", 5.0, "The aging patriarch of an organized crime dynasty transfers control to his reluctant son.", R.drawable.godfather),
-            Movie("The Shawshank Redemption", 4.9, "Two imprisoned men bond over years, finding solace and redemption.", R.drawable.shawshank)
-        )
+        loadMovies()
+    }
 
-        // Adapter with filtering support
-        val adapter = MovieAdapter(movies.toMutableList()) // make it mutable
-        recyclerView.adapter = adapter
+    private fun setupRecyclerView() {
+        adapter = MovieGridAdapter { movie ->
+            val intent = Intent(this, MovieDetailActivity::class.java)
+            intent.putExtra("movie", movie)
+            startActivity(intent)
+        }
 
-        // Search functionality
-        searchBar.addTextChangedListener(object : TextWatcher {
+        binding.recyclerView.layoutManager = GridLayoutManager(this, 2)
+        binding.recyclerView.adapter = adapter
+        binding.recyclerView.setHasFixedSize(true)
+    }
+
+    private fun setupSearchBar() {
+        binding.searchBar.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {}
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                adapter.filter(s.toString())
+                filterMovies()
             }
         })
+    }
 
-        // Open ProfileActivity
-        profileIcon.setOnClickListener {
-            startActivity(Intent(this, ProfileActivity::class.java))
+    private fun setupGenreFilter() {
+        val genres = listOf("Action", "Drama", "Sci-Fi", "Thriller", "Crime", "Adventure")
+
+        genres.forEach { genre ->
+            val chip = Chip(this).apply {
+                text = genre
+                isCheckable = true
+                setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked) {
+                        selectedGenres.add(genre)
+                    } else {
+                        selectedGenres.remove(genre)
+                    }
+                    filterMovies()
+                }
+            }
+            binding.genreChipGroup.addView(chip)
         }
+    }
+
+    private fun setupSwipeRefresh() {
+        binding.swipeRefresh.setOnRefreshListener {
+            loadMovies()
+        }
+    }
+
+    private fun loadMovies() {
+        showLoading(true)
+
+        lifecycleScope.launch {
+            try {
+                // Initialize sample data if needed
+                firebaseManager.initializeSampleMovies()
+
+                allMovies = firebaseManager.getAllMovies()
+                adapter.submitList(allMovies)
+
+                if (allMovies.isEmpty()) {
+                    showEmpty(true)
+                } else {
+                    showEmpty(false)
+                }
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Error loading movies: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } finally {
+                showLoading(false)
+                binding.swipeRefresh.isRefreshing = false
+            }
+        }
+    }
+
+    private fun filterMovies() {
+        val query = binding.searchBar.text.toString().toLowerCase()
+
+        val filtered = allMovies.filter { movie ->
+            val matchesSearch = query.isEmpty() ||
+                    movie.title.toLowerCase().contains(query) ||
+                    movie.director.toLowerCase().contains(query)
+
+            val matchesGenre = selectedGenres.isEmpty() ||
+                    movie.genre.any { it in selectedGenres }
+
+            matchesSearch && matchesGenre
+        }
+
+        adapter.submitList(filtered)
+        showEmpty(filtered.isEmpty() && !query.isEmpty())
+    }
+
+    private fun showLoading(show: Boolean) {
+        binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
+        binding.recyclerView.visibility = if (show) View.GONE else View.VISIBLE
+    }
+
+    private fun showEmpty(show: Boolean) {
+        binding.emptyView.visibility = if (show) View.VISIBLE else View.GONE
+        binding.recyclerView.visibility = if (show) View.GONE else View.VISIBLE
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_profile -> {
+                if (firebaseManager.getCurrentUser() != null) {
+                    startActivity(Intent(this, ProfileActivity::class.java))
+                } else {
+                    startActivity(Intent(this, LoginActivity::class.java))
+                }
+                true
+            }
+            R.id.action_watchlist -> {
+                if (firebaseManager.getCurrentUser() != null) {
+                    startActivity(Intent(this, WatchlistActivity::class.java))
+                } else {
+                    Toast.makeText(this, "Please sign in to view watchlist", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this, LoginActivity::class.java))
+                }
+                true
+            }
+            R.id.action_sort_rating -> {
+                val sorted = allMovies.sortedByDescending { it.averageRating }
+                adapter.submitList(sorted)
+                true
+            }
+            R.id.action_sort_year -> {
+                val sorted = allMovies.sortedByDescending { it.year }
+                adapter.submitList(sorted)
+                true
+            }
+            R.id.action_sort_title -> {
+                val sorted = allMovies.sortedBy { it.title }
+                adapter.submitList(sorted)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh movies when returning to this activity
+        filterMovies()
     }
 }

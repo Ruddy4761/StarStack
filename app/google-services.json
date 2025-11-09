@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "575232074359",
+    "project_id": "starstack-fd4c3",
+    "storage_bucket": "starstack-fd4c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:575232074359:android:659c9074e3ee51403adc72",
+        "android_client_info": {
+          "package_name": "com.example.starstack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDqUEzqwVcs6PgkQ4NX4xPM1yZ8hIOa_yQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_watchlist"
+        android:icon="@android:drawable/ic_menu_myplaces"
+        android:title="Watchlist"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/action_profile"
+        android:icon="@android:drawable/ic_menu_myplaces"
+        android:title="Profile"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/action_sort"
+        android:title="Sort By">
+        <menu>
+            <item
+                android:id="@+id/action_sort_rating"
+                android:title="Rating"/>
+            <item
+                android:id="@+id/action_sort_year"
+                android:title="Year"/>
+            <item
+                android:id="@+id/action_sort_title"
+                android:title="Title"/>
+        </menu>
+    </item>
+
+</menu>
