@@ -1,0 +1,12 @@
+<resources>
+    <!-- Existing dark colors -->
+    <color name="dark_background">#121212</color>
+    <color name="dark_card">#1E1E1E</color>
+    <color name="dark_text_primary">#FFFFFF</color>
+    <color name="dark_text_secondary">#BBBBBB</color>
+    <color name="dark_accent">#BB86FC</color>
+    <color name="dark_search_bg">#2C2C2C</color>
+
+    <!-- Add this -->
+    <color name="white">#FFFFFF</color>
+</resources>
