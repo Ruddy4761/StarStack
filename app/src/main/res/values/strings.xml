@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">StarStack</string>
-    <string name="default_web_client_id">YOUR_GOOGLE_WEB_CLIENT_ID</string>
+    <!-- Replace with your actual Google Web Client ID from Firebase Console -->
+    <string name="default_web_client_id">575232074359-YOUR_CLIENT_ID.apps.googleusercontent.com</string>
 </resources>

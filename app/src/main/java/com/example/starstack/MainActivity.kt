@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -23,8 +24,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val firebaseManager = FirebaseManager.getInstance()
     private lateinit var adapter: MovieGridAdapter
-    
-    
+
     private var allMovies = listOf<Movie>()
     private var selectedGenres = mutableSetOf<String>()
 
@@ -41,7 +41,32 @@ class MainActivity : AppCompatActivity() {
         setupGenreFilter()
         setupSwipeRefresh()
 
-        loadMovies()
+        // Initialize sample data first, then load movies
+        initializeAndLoadMovies()
+    }
+
+    private fun initializeAndLoadMovies() {
+        showLoading(true)
+        lifecycleScope.launch {
+            try {
+                // First, initialize sample movies if needed
+                firebaseManager.initializeSampleMovies()
+
+                // Give Firebase a moment to complete
+                kotlinx.coroutines.delay(500)
+
+                // Then load movies
+                loadMovies()
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error initializing movies", e)
+                showLoading(false)
+                Toast.makeText(
+                    this@MainActivity,
+                    "Error loading movies: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 
     private fun setupRecyclerView() {
@@ -97,18 +122,23 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // Initialize sample data if needed
-                firebaseManager.initializeSampleMovies()
-
                 allMovies = firebaseManager.getAllMovies()
-                adapter.submitList(allMovies)
+
+                Log.d("MainActivity", "Loaded ${allMovies.size} movies")
 
                 if (allMovies.isEmpty()) {
                     showEmpty(true)
+                    Toast.makeText(
+                        this@MainActivity,
+                        "No movies found. Initializing sample data...",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 } else {
                     showEmpty(false)
+                    adapter.submitList(allMovies)
                 }
             } catch (e: Exception) {
+                Log.e("MainActivity", "Error loading movies", e)
                 Toast.makeText(
                     this@MainActivity,
                     "Error loading movies: ${e.message}",
@@ -195,6 +225,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         // Refresh movies when returning to this activity
-        filterMovies()
+        if (allMovies.isNotEmpty()) {
+            filterMovies()
+        }
     }
 }
