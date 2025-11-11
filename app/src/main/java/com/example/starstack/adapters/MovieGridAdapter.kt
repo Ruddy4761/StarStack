@@ -26,6 +26,14 @@ class MovieGridAdapter(
         holder.bind(getItem(position))
     }
 
+    private class MovieDiffCallback : DiffUtil.ItemCallback<Movie>() {
+        override fun areItemsTheSame(oldItem: Movie, newItem: Movie) =
+            oldItem.id == newItem.id
+
+        override fun areContentsTheSame(oldItem: Movie, newItem: Movie) =
+            oldItem == newItem
+    }
+
     inner class MovieViewHolder(
         private val binding: ItemMovieGridBinding
     ) : RecyclerView.ViewHolder(binding.root) {
@@ -46,18 +54,16 @@ class MovieGridAdapter(
                 tvRating.text = "⭐ ${String.format("%.1f", movie.averageRating)}"
                 tvGenre.text = movie.genre.firstOrNull() ?: ""
 
-                // Load poster image using Glide (you'll need to add actual images)
-                // For now, using placeholder
-                // Glide.with(itemView.context)
-                //     .load(movie.posterUrl)
-                //     .placeholder(R.drawable.placeholder_movie)
-                //     .into(ivPoster)
+                // Load poster image using Glide
+                if (movie.posterUrl.isNotEmpty()) {
+                    com.bumptech.glide.Glide.with(itemView.context)
+                        .load(movie.posterUrl)
+                        .placeholder(com.example.starstack.R.drawable.ic_launcher_foreground)
+                        .error(com.example.starstack.R.drawable.ic_launcher_foreground)
+                        .centerCrop()
+                        .into(ivPoster)
+                }
             }
         }
-    }
-
-    class MovieDiffCallback : DiffUtil.ItemCallback<Movie>() {
-        override fun areItemsTheSame(oldItem: Movie, newItem: Movie) = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: Movie, newItem: Movie) = oldItem == newItem
     }
 }

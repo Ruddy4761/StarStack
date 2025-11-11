@@ -9,9 +9,11 @@
         android:id="@+id/logoImage"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:src="@color/white"
+        android:src="@mipmap/ic_launcher"
         android:layout_centerInParent="true"
-        android:contentDescription="App Logo" />
+        android:contentDescription="App Logo"
+
+        />
 
     <TextView
         android:id="@+id/StarStack"

@@ -16,17 +16,22 @@ import com.example.starstack.adapters.MovieGridAdapter
 import com.example.starstack.databinding.ActivityMainBinding
 import com.example.starstack.firebase.FirebaseManager
 import com.example.starstack.models.Movie
+import com.example.starstack.repository.OMDbMovieRepository
 import com.google.android.material.chip.Chip
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val firebaseManager = FirebaseManager.getInstance()
+    private val movieRepository = OMDbMovieRepository()
     private lateinit var adapter: MovieGridAdapter
 
     private var allMovies = listOf<Movie>()
     private var selectedGenres = mutableSetOf<String>()
+    private var searchJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,35 +43,9 @@ class MainActivity : AppCompatActivity() {
 
         setupRecyclerView()
         setupSearchBar()
-        setupGenreFilter()
         setupSwipeRefresh()
 
-        // Initialize sample data first, then load movies
-        initializeAndLoadMovies()
-    }
-
-    private fun initializeAndLoadMovies() {
-        showLoading(true)
-        lifecycleScope.launch {
-            try {
-                // First, initialize sample movies if needed
-                firebaseManager.initializeSampleMovies()
-
-                // Give Firebase a moment to complete
-                kotlinx.coroutines.delay(500)
-
-                // Then load movies
-                loadMovies()
-            } catch (e: Exception) {
-                Log.e("MainActivity", "Error initializing movies", e)
-                showLoading(false)
-                Toast.makeText(
-                    this@MainActivity,
-                    "Error loading movies: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
+        loadPopularMovies()
     }
 
     private fun setupRecyclerView() {
@@ -86,13 +65,72 @@ class MainActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                filterMovies()
+                val query = s.toString().trim()
+
+                // Cancel previous search job
+                searchJob?.cancel()
+
+                if (query.length >= 3) {
+                    // Debounce search - wait 500ms after user stops typing
+                    searchJob = lifecycleScope.launch {
+                        delay(500)
+                        searchMovies(query)
+                    }
+                } else if (query.isEmpty()) {
+                    filterMovies()
+                }
             }
         })
     }
 
+    private fun setupSwipeRefresh() {
+        binding.swipeRefresh.setOnRefreshListener {
+            loadPopularMovies()
+        }
+    }
+
+    private fun loadPopularMovies() {
+        showLoading(true)
+        lifecycleScope.launch {
+            try {
+                val omdbResults = movieRepository.getPopularMovies()
+                allMovies = omdbResults.map { movieRepository.searchResultToMovie(it) }
+
+                Log.d("MainActivity", "Loaded ${allMovies.size} movies from OMDb")
+
+                if (allMovies.isEmpty()) {
+                    showEmpty(true)
+                    Toast.makeText(
+                        this@MainActivity,
+                        "No movies loaded. Check your API key and internet connection.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    showEmpty(false)
+                    adapter.submitList(allMovies)
+                    setupGenreFilter()
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error loading movies", e)
+                Toast.makeText(
+                    this@MainActivity,
+                    "Error loading movies: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } finally {
+                showLoading(false)
+                binding.swipeRefresh.isRefreshing = false
+            }
+        }
+    }
+
     private fun setupGenreFilter() {
-        val genres = listOf("Action", "Drama", "Sci-Fi", "Thriller", "Crime", "Adventure")
+        binding.genreChipGroup.removeAllViews()
+
+        // Extract genres from loaded movies
+        val genres = movieRepository.extractGenresFromMovies(allMovies).sorted()
+
+        if (genres.isEmpty()) return
 
         genres.forEach { genre ->
             val chip = Chip(this).apply {
@@ -111,42 +149,44 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupSwipeRefresh() {
-        binding.swipeRefresh.setOnRefreshListener {
-            loadMovies()
-        }
-    }
-
-    private fun loadMovies() {
+    private fun searchMovies(query: String) {
         showLoading(true)
-
         lifecycleScope.launch {
             try {
-                allMovies = firebaseManager.getAllMovies()
+                val omdbResults = movieRepository.searchMovies(query)
 
-                Log.d("MainActivity", "Loaded ${allMovies.size} movies")
-
-                if (allMovies.isEmpty()) {
+                if (omdbResults.isEmpty()) {
+                    allMovies = emptyList()
                     showEmpty(true)
                     Toast.makeText(
                         this@MainActivity,
-                        "No movies found. Initializing sample data...",
+                        "No movies found for \"$query\"",
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
+                    // Get full details for each search result
+                    allMovies = omdbResults.map { result ->
+                        val details = movieRepository.getMovieDetails(result.imdbID)
+                        if (details != null) {
+                            movieRepository.movieDetailsToMovie(details)
+                        } else {
+                            movieRepository.searchResultToMovie(result)
+                        }
+                    }
+
                     showEmpty(false)
                     adapter.submitList(allMovies)
+                    setupGenreFilter()
                 }
             } catch (e: Exception) {
-                Log.e("MainActivity", "Error loading movies", e)
+                Log.e("MainActivity", "Error searching movies", e)
                 Toast.makeText(
                     this@MainActivity,
-                    "Error loading movies: ${e.message}",
+                    "Search error: ${e.message}",
                     Toast.LENGTH_SHORT
                 ).show()
             } finally {
                 showLoading(false)
-                binding.swipeRefresh.isRefreshing = false
             }
         }
     }
@@ -166,7 +206,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         adapter.submitList(filtered)
-        showEmpty(filtered.isEmpty() && !query.isEmpty())
+        showEmpty(filtered.isEmpty() && query.isNotEmpty())
     }
 
     private fun showLoading(show: Boolean) {
@@ -206,16 +246,19 @@ class MainActivity : AppCompatActivity() {
             R.id.action_sort_rating -> {
                 val sorted = allMovies.sortedByDescending { it.averageRating }
                 adapter.submitList(sorted)
+                Toast.makeText(this, "Sorted by rating", Toast.LENGTH_SHORT).show()
                 true
             }
             R.id.action_sort_year -> {
                 val sorted = allMovies.sortedByDescending { it.year }
                 adapter.submitList(sorted)
+                Toast.makeText(this, "Sorted by year", Toast.LENGTH_SHORT).show()
                 true
             }
             R.id.action_sort_title -> {
                 val sorted = allMovies.sortedBy { it.title }
                 adapter.submitList(sorted)
+                Toast.makeText(this, "Sorted by title", Toast.LENGTH_SHORT).show()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -224,7 +267,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Refresh movies when returning to this activity
         if (allMovies.isNotEmpty()) {
             filterMovies()
         }

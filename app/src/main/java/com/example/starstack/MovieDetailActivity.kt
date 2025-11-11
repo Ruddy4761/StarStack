@@ -8,11 +8,13 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.example.starstack.adapters.ReviewAdapter
 import com.example.starstack.databinding.ActivityMovieDetailsBinding
 import com.example.starstack.firebase.FirebaseManager
 import com.example.starstack.models.Movie
 import com.example.starstack.models.Review
+import com.example.starstack.repository.OMDbMovieRepository
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
 
@@ -20,6 +22,7 @@ class MovieDetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMovieDetailsBinding
     private val firebaseManager = FirebaseManager.getInstance()
+    private val movieRepository = OMDbMovieRepository()
     private lateinit var movie: Movie
     private lateinit var reviewAdapter: ReviewAdapter
     private var userRating: Double? = null
@@ -37,8 +40,7 @@ class MovieDetailActivity : AppCompatActivity() {
 
         setupToolbar()
         setupReviewRecyclerView()
-        displayMovieDetails()
-        loadReviews()
+        loadCompleteMovieDetails()
         checkWatchlistStatus()
         loadUserRating()
         setupListeners()
@@ -64,20 +66,63 @@ class MovieDetailActivity : AppCompatActivity() {
         }
     }
 
+    private fun loadCompleteMovieDetails() {
+        lifecycleScope.launch {
+            try {
+                // If movie doesn't have full details, fetch them
+                if (movie.director.isEmpty() || movie.description.isEmpty()) {
+                    val details = movieRepository.getMovieDetails(movie.id)
+
+                    if (details != null) {
+                        movie = movieRepository.movieDetailsToMovie(details)
+                    }
+                }
+
+                displayMovieDetails()
+                loadReviews()
+            } catch (e: Exception) {
+                displayMovieDetails()
+                loadReviews()
+            }
+        }
+    }
+
     private fun displayMovieDetails() {
         binding.apply {
             tvTitle.text = movie.title
             tvYear.text = movie.year.toString()
-            tvDirector.text = "Directed by ${movie.director}"
-            tvDuration.text = "${movie.duration} min"
-            tvGenres.text = movie.genre.joinToString(" • ")
+            tvDirector.text = if (movie.director.isNotEmpty() && movie.director != "N/A") {
+                "Directed by ${movie.director}"
+            } else {
+                "Director information not available"
+            }
+            tvDuration.text = if (movie.duration > 0) "${movie.duration} min" else "Duration N/A"
+            tvGenres.text = if (movie.genre.isNotEmpty()) {
+                movie.genre.joinToString(" • ")
+            } else {
+                "Genre not available"
+            }
             tvDescription.text = movie.description
-            tvCast.text = movie.cast.joinToString(", ")
-            tvRating.text = String.format("%.1f", movie.averageRating)
-            tvReviewCount.text = "(${movie.totalReviews} reviews)"
+            tvCast.text = if (movie.cast.isNotEmpty()) {
+                movie.cast.joinToString(", ")
+            } else {
+                "Cast information not available"
+            }
 
-            // Set rating stars
+            // IMDb rating converted to 5-star scale
+            tvRating.text = String.format("%.1f", movie.averageRating)
+            tvReviewCount.text = "(${movie.totalReviews} user reviews)"
+
             ratingBar.rating = movie.averageRating.toFloat()
+
+            // Load poster image
+            if (movie.posterUrl.isNotEmpty()) {
+                Glide.with(this@MovieDetailActivity)
+                    .load(movie.posterUrl)
+                    .placeholder(R.drawable.ic_launcher_foreground)
+                    .error(R.drawable.ic_launcher_foreground)
+                    .into(ivPoster)
+            }
         }
     }
 
@@ -110,6 +155,10 @@ class MovieDetailActivity : AppCompatActivity() {
             try {
                 val reviews = firebaseManager.getMovieReviews(movie.id)
                 reviewAdapter.submitList(reviews)
+
+                // Update review count
+                movie = movie.copy(totalReviews = reviews.size)
+                binding.tvReviewCount.text = "(${movie.totalReviews} user reviews)"
 
                 binding.tvNoReviews.visibility = if (reviews.isEmpty()) View.VISIBLE else View.GONE
             } catch (e: Exception) {
@@ -178,13 +227,6 @@ class MovieDetailActivity : AppCompatActivity() {
                 userRating = rating
                 binding.btnRate.text = "Your Rating: ⭐ ${String.format("%.1f", rating)}"
                 Toast.makeText(this@MovieDetailActivity, "Rating submitted!", Toast.LENGTH_SHORT).show()
-
-                // Refresh movie details to show updated average
-                val updatedMovie = firebaseManager.getMovieById(movie.id)
-                updatedMovie?.let {
-                    movie = it
-                    displayMovieDetails()
-                }
             } catch (e: Exception) {
                 Toast.makeText(
                     this@MovieDetailActivity,
@@ -227,6 +269,7 @@ class MovieDetailActivity : AppCompatActivity() {
                 val review = Review(
                     movieId = movie.id,
                     movieTitle = movie.title,
+                    moviePosterUrl = movie.posterUrl,
                     userId = user.uid,
                     userName = userData?.displayName ?: user.displayName ?: "Anonymous",
                     userPhotoUrl = userData?.photoUrl ?: user.photoUrl?.toString() ?: "",
@@ -238,13 +281,6 @@ class MovieDetailActivity : AppCompatActivity() {
                 firebaseManager.addReview(review)
                 Toast.makeText(this@MovieDetailActivity, "Review submitted!", Toast.LENGTH_SHORT).show()
                 loadReviews()
-
-                // Refresh movie details
-                val updatedMovie = firebaseManager.getMovieById(movie.id)
-                updatedMovie?.let {
-                    movie = it
-                    displayMovieDetails()
-                }
             } catch (e: Exception) {
                 Toast.makeText(
                     this@MovieDetailActivity,
@@ -290,13 +326,6 @@ class MovieDetailActivity : AppCompatActivity() {
                         firebaseManager.deleteReview(review.id, movie.id)
                         Toast.makeText(this@MovieDetailActivity, "Review deleted", Toast.LENGTH_SHORT).show()
                         loadReviews()
-
-                        // Refresh movie details
-                        val updatedMovie = firebaseManager.getMovieById(movie.id)
-                        updatedMovie?.let {
-                            movie = it
-                            displayMovieDetails()
-                        }
                     } catch (e: Exception) {
                         Toast.makeText(
                             this@MovieDetailActivity,

@@ -11,12 +11,14 @@ import com.example.starstack.adapters.MovieGridAdapter
 import com.example.starstack.databinding.ActivityWatchlistBinding
 import com.example.starstack.firebase.FirebaseManager
 import com.example.starstack.models.Movie
+import com.example.starstack.repository.OMDbMovieRepository
 import kotlinx.coroutines.launch
 
 class WatchlistActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityWatchlistBinding
     private val firebaseManager = FirebaseManager.getInstance()
+    private val movieRepository = OMDbMovieRepository()
     private lateinit var adapter: MovieGridAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,9 +63,12 @@ class WatchlistActivity : AppCompatActivity() {
                 }
 
                 val movies = mutableListOf<Movie>()
+
+                // Fetch details for each movie in watchlist
                 watchlistMovieIds.forEach { movieId ->
-                    firebaseManager.getMovieById(movieId)?.let { movie ->
-                        movies.add(movie)
+                    val details = movieRepository.getMovieDetails(movieId)
+                    if (details != null) {
+                        movies.add(movieRepository.movieDetailsToMovie(details))
                     }
                 }
 
