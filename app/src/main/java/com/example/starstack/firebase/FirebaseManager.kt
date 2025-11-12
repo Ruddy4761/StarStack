@@ -1,6 +1,6 @@
 package com.example.starstack.firebase
 
-
+import android.util.Log
 import com.example.starstack.models.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -77,14 +77,35 @@ class FirebaseManager {
 
     suspend fun getUserData(uid: String): User? {
         return try {
-            usersCollection.document(uid).get().await().toObject(User::class.java)
+            val snapshot = usersCollection.document(uid).get().await()
+            if (!snapshot.exists()) {
+                // Create user document if it doesn't exist
+                val currentUser = auth.currentUser
+                if (currentUser != null && currentUser.uid == uid) {
+                    val userData = User(
+                        uid = uid,
+                        email = currentUser.email ?: "",
+                        displayName = currentUser.displayName ?: "",
+                        photoUrl = currentUser.photoUrl?.toString() ?: "",
+                        joinedDate = Timestamp.now()
+                    )
+                    usersCollection.document(uid).set(userData).await()
+                    return userData
+                }
+            }
+            snapshot.toObject(User::class.java)
         } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error getting user data", e)
             null
         }
     }
 
     suspend fun updateUserProfile(uid: String, updates: Map<String, Any>) {
-        usersCollection.document(uid).update(updates).await()
+        try {
+            usersCollection.document(uid).update(updates).await()
+        } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error updating profile", e)
+        }
     }
 
     // ===== Movie Operations =====
@@ -121,74 +142,123 @@ class FirebaseManager {
     // ===== Review Operations =====
 
     suspend fun addReview(review: Review): String {
-        val docRef = reviewsCollection.document()
-        val reviewWithId = review.copy(id = docRef.id)
-        docRef.set(reviewWithId).await()
+        return try {
+            val docRef = reviewsCollection.document()
+            val reviewWithId = review.copy(id = docRef.id)
+            docRef.set(reviewWithId).await()
 
-        // Update movie's average rating and review count
-        updateMovieRating(review.movieId)
+            Log.d("FirebaseManager", "Review added with ID: ${docRef.id}")
 
-        // Update user's review count
-        getCurrentUser()?.uid?.let { uid ->
-            usersCollection.document(uid).update(
-                "totalReviews", com.google.firebase.firestore.FieldValue.increment(1)
-            ).await()
+            // Update user's review count - ensure user doc exists first
+            getCurrentUser()?.uid?.let { uid ->
+                try {
+                    // Get current user data
+                    val userDoc = usersCollection.document(uid).get().await()
+                    if (userDoc.exists()) {
+                        usersCollection.document(uid).update(
+                            "totalReviews", com.google.firebase.firestore.FieldValue.increment(1)
+                        ).await()
+                    } else {
+                        // Create user document if it doesn't exist
+                        getUserData(uid)
+                        usersCollection.document(uid).update(
+                            "totalReviews", 1
+                        ).await()
+                    }
+                    Log.d("FirebaseManager", "User review count updated")
+                } catch (e: Exception) {
+                    Log.e("FirebaseManager", "Error updating user review count", e)
+                }
+            }
+
+            docRef.id
+        } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error adding review", e)
+            throw e
         }
-
-        return docRef.id
     }
 
     suspend fun getMovieReviews(movieId: String): List<Review> {
         return try {
-            reviewsCollection
+            Log.d("FirebaseManager", "Fetching reviews for movie: $movieId")
+            val reviews = reviewsCollection
                 .whereEqualTo("movieId", movieId)
-                .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .await()
                 .toObjects(Review::class.java)
+                .sortedByDescending { it.timestamp.toDate() }
+
+            Log.d("FirebaseManager", "Found ${reviews.size} reviews")
+            reviews
         } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error loading reviews", e)
             emptyList()
         }
     }
 
     suspend fun getUserReviews(userId: String): List<Review> {
         return try {
-            reviewsCollection
+            Log.d("FirebaseManager", "Fetching reviews for user: $userId")
+            val reviews = reviewsCollection
                 .whereEqualTo("userId", userId)
-                .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .await()
                 .toObjects(Review::class.java)
+                .sortedByDescending { it.timestamp.toDate() }
+
+            Log.d("FirebaseManager", "Found ${reviews.size} user reviews")
+            reviews
         } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error loading user reviews", e)
             emptyList()
         }
     }
 
     suspend fun deleteReview(reviewId: String, movieId: String) {
-        reviewsCollection.document(reviewId).delete().await()
-        updateMovieRating(movieId)
+        try {
+            reviewsCollection.document(reviewId).delete().await()
 
-        getCurrentUser()?.uid?.let { uid ->
-            usersCollection.document(uid).update(
-                "totalReviews", com.google.firebase.firestore.FieldValue.increment(-1)
-            ).await()
+            getCurrentUser()?.uid?.let { uid ->
+                try {
+                    usersCollection.document(uid).update(
+                        "totalReviews", com.google.firebase.firestore.FieldValue.increment(-1)
+                    ).await()
+                } catch (e: Exception) {
+                    Log.e("FirebaseManager", "Error updating review count", e)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error deleting review", e)
+            throw e
         }
     }
 
     suspend fun likeReview(reviewId: String, userId: String) {
-        val reviewRef = reviewsCollection.document(reviewId)
-        reviewRef.update(
-            "likes", com.google.firebase.firestore.FieldValue.increment(1),
-            "likedBy", com.google.firebase.firestore.FieldValue.arrayUnion(userId)
-        ).await()
+        try {
+            val reviewRef = reviewsCollection.document(reviewId)
+            reviewRef.update(
+                mapOf(
+                    "likes" to com.google.firebase.firestore.FieldValue.increment(1),
+                    "likedBy" to com.google.firebase.firestore.FieldValue.arrayUnion(userId)
+                )
+            ).await()
+        } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error liking review", e)
+        }
     }
 
     suspend fun unlikeReview(reviewId: String, userId: String) {
-        val reviewRef = reviewsCollection.document(reviewId)
-        reviewRef.update(
-            "likes", com.google.firebase.firestore.FieldValue.increment(-1),
-            "likedBy", com.google.firebase.firestore.FieldValue.arrayRemove(userId)
-        ).await()
+        try {
+            val reviewRef = reviewsCollection.document(reviewId)
+            reviewRef.update(
+                mapOf(
+                    "likes" to com.google.firebase.firestore.FieldValue.increment(-1),
+                    "likedBy" to com.google.firebase.firestore.FieldValue.arrayRemove(userId)
+                )
+            ).await()
+        } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error unliking review", e)
+        }
     }
 
     // ===== Rating Operations =====
@@ -197,15 +267,19 @@ class FirebaseManager {
         val userId = getCurrentUser()?.uid ?: return
         val ratingId = "${userId}_${movieId}"
 
-        val userRating = UserRating(
-            userId = userId,
-            movieId = movieId,
-            rating = rating,
-            timestamp = Timestamp.now()
-        )
+        try {
+            val userRating = UserRating(
+                userId = userId,
+                movieId = movieId,
+                rating = rating,
+                timestamp = Timestamp.now()
+            )
 
-        ratingsCollection.document(ratingId).set(userRating).await()
-        updateMovieRating(movieId)
+            ratingsCollection.document(ratingId).set(userRating).await()
+            Log.d("FirebaseManager", "Rating saved: $rating for movie: $movieId")
+        } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error saving rating", e)
+        }
     }
 
     suspend fun getUserRating(movieId: String): Double? {
@@ -217,39 +291,6 @@ class FirebaseManager {
             doc.toObject(UserRating::class.java)?.rating
         } catch (e: Exception) {
             null
-        }
-    }
-
-    private suspend fun updateMovieRating(movieId: String) {
-        try {
-            // Get all ratings for this movie
-            val ratings = ratingsCollection
-                .whereEqualTo("movieId", movieId)
-                .get()
-                .await()
-                .toObjects(UserRating::class.java)
-
-            // Get all reviews for this movie
-            val reviews = reviewsCollection
-                .whereEqualTo("movieId", movieId)
-                .get()
-                .await()
-                .toObjects(Review::class.java)
-
-            // Combine ratings from both sources
-            val allRatings = ratings.map { it.rating } + reviews.map { it.rating }
-
-            if (allRatings.isNotEmpty()) {
-                val avgRating = allRatings.average()
-                moviesCollection.document(movieId).update(
-                    mapOf(
-                        "averageRating" to avgRating,
-                        "totalReviews" to reviews.size
-                    )
-                ).await()
-            }
-        } catch (e: Exception) {
-            // Handle error
         }
     }
 
@@ -267,13 +308,29 @@ class FirebaseManager {
                 addedDate = Timestamp.now()
             )
             watchlistCollection.document(itemId).set(item).await()
+            Log.d("FirebaseManager", "Added to watchlist: $movieId")
 
-            usersCollection.document(userId).update(
-                "watchlistCount", com.google.firebase.firestore.FieldValue.increment(1)
-            ).await()
+            // Update user's watchlist count
+            try {
+                val userDoc = usersCollection.document(userId).get().await()
+                if (userDoc.exists()) {
+                    usersCollection.document(userId).update(
+                        "watchlistCount", com.google.firebase.firestore.FieldValue.increment(1)
+                    ).await()
+                } else {
+                    getUserData(userId)
+                    usersCollection.document(userId).update(
+                        "watchlistCount", 1
+                    ).await()
+                }
+                Log.d("FirebaseManager", "User watchlist count updated")
+            } catch (e: Exception) {
+                Log.e("FirebaseManager", "Error updating watchlist count", e)
+            }
 
             true
         } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error adding to watchlist", e)
             false
         }
     }
@@ -284,13 +341,19 @@ class FirebaseManager {
 
         return try {
             watchlistCollection.document(itemId).delete().await()
+            Log.d("FirebaseManager", "Removed from watchlist: $movieId")
 
-            usersCollection.document(userId).update(
-                "watchlistCount", com.google.firebase.firestore.FieldValue.increment(-1)
-            ).await()
+            try {
+                usersCollection.document(userId).update(
+                    "watchlistCount", com.google.firebase.firestore.FieldValue.increment(-1)
+                ).await()
+            } catch (e: Exception) {
+                Log.e("FirebaseManager", "Error updating watchlist count", e)
+            }
 
             true
         } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error removing from watchlist", e)
             false
         }
     }
@@ -300,8 +363,11 @@ class FirebaseManager {
         val itemId = "${userId}_${movieId}"
 
         return try {
-            watchlistCollection.document(itemId).get().await().exists()
+            val exists = watchlistCollection.document(itemId).get().await().exists()
+            Log.d("FirebaseManager", "Watchlist check for $movieId: $exists")
+            exists
         } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error checking watchlist", e)
             false
         }
     }
@@ -310,90 +376,20 @@ class FirebaseManager {
         val userId = getCurrentUser()?.uid ?: return emptyList()
 
         return try {
-            watchlistCollection
+            Log.d("FirebaseManager", "Fetching watchlist for user: $userId")
+            val items = watchlistCollection
                 .whereEqualTo("userId", userId)
-                .orderBy("addedDate", Query.Direction.DESCENDING)
                 .get()
                 .await()
                 .toObjects(WatchlistItem::class.java)
+                .sortedByDescending { it.addedDate.toDate() }
                 .map { it.movieId }
+
+            Log.d("FirebaseManager", "Found ${items.size} items in watchlist")
+            items
         } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error loading watchlist", e)
             emptyList()
-        }
-    }
-
-    // ===== Initialize Sample Data =====
-
-    suspend fun initializeSampleMovies() {
-        // Check if movies already exist
-        val existingMovies = moviesCollection.limit(1).get().await()
-        if (!existingMovies.isEmpty) return
-
-        val sampleMovies = listOf(
-            Movie(
-                id = "inception",
-                title = "Inception",
-                year = 2010,
-                director = "Christopher Nolan",
-                cast = listOf("Leonardo DiCaprio", "Joseph Gordon-Levitt", "Ellen Page"),
-                genre = listOf("Sci-Fi", "Thriller", "Action"),
-                duration = 148,
-                description = "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
-                releaseDate = "July 16, 2010",
-                averageRating = 4.8
-            ),
-            Movie(
-                id = "interstellar",
-                title = "Interstellar",
-                year = 2014,
-                director = "Christopher Nolan",
-                cast = listOf("Matthew McConaughey", "Anne Hathaway", "Jessica Chastain"),
-                genre = listOf("Sci-Fi", "Drama", "Adventure"),
-                duration = 169,
-                description = "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
-                releaseDate = "November 7, 2014",
-                averageRating = 4.7
-            ),
-            Movie(
-                id = "dark_knight",
-                title = "The Dark Knight",
-                year = 2008,
-                director = "Christopher Nolan",
-                cast = listOf("Christian Bale", "Heath Ledger", "Aaron Eckhart"),
-                genre = listOf("Action", "Crime", "Drama"),
-                duration = 152,
-                description = "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests.",
-                releaseDate = "July 18, 2008",
-                averageRating = 4.9
-            ),
-            Movie(
-                id = "godfather",
-                title = "The Godfather",
-                year = 1972,
-                director = "Francis Ford Coppola",
-                cast = listOf("Marlon Brando", "Al Pacino", "James Caan"),
-                genre = listOf("Crime", "Drama"),
-                duration = 175,
-                description = "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.",
-                releaseDate = "March 24, 1972",
-                averageRating = 5.0
-            ),
-            Movie(
-                id = "shawshank",
-                title = "The Shawshank Redemption",
-                year = 1994,
-                director = "Frank Darabont",
-                cast = listOf("Tim Robbins", "Morgan Freeman", "Bob Gunton"),
-                genre = listOf("Drama"),
-                duration = 142,
-                description = "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.",
-                releaseDate = "September 23, 1994",
-                averageRating = 4.9
-            )
-        )
-
-        sampleMovies.forEach { movie ->
-            moviesCollection.document(movie.id).set(movie).await()
         }
     }
 }
