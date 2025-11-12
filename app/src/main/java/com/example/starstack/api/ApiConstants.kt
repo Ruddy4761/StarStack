@@ -1,4 +1,4 @@
-package com.example.starstack.API
+package com.example.starstack.api
 
 object ApiConstants {
     // TODO: Replace with your actual TMDb API key

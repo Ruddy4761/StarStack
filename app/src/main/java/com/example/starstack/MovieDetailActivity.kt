@@ -2,6 +2,7 @@ package com.example.starstack
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -17,6 +18,8 @@ import com.example.starstack.models.Review
 import com.example.starstack.repository.OMDbMovieRepository
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MovieDetailActivity : AppCompatActivity() {
 
@@ -27,6 +30,7 @@ class MovieDetailActivity : AppCompatActivity() {
     private lateinit var reviewAdapter: ReviewAdapter
     private var userRating: Double? = null
     private var isInWatchlist = false
+    private val TAG = "MovieDetailActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +41,8 @@ class MovieDetailActivity : AppCompatActivity() {
             finish()
             return
         }
+
+        Log.d(TAG, "Loaded movie: ${movie.title} (${movie.id})")
 
         setupToolbar()
         setupReviewRecyclerView()
@@ -71,16 +77,22 @@ class MovieDetailActivity : AppCompatActivity() {
             try {
                 // If movie doesn't have full details, fetch them
                 if (movie.director.isEmpty() || movie.description.isEmpty()) {
-                    val details = movieRepository.getMovieDetails(movie.id)
+                    Log.d(TAG, "Fetching complete details for: ${movie.id}")
+                    // Use withContext to switch to IO dispatcher for network call
+                    val details = withContext(Dispatchers.IO) {
+                        movieRepository.getMovieDetails(movie.id)
+                    }
 
                     if (details != null) {
                         movie = movieRepository.movieDetailsToMovie(details)
+                        Log.d(TAG, "Details loaded successfully")
                     }
                 }
 
                 displayMovieDetails()
                 loadReviews()
             } catch (e: Exception) {
+                Log.e(TAG, "Error loading movie details", e)
                 displayMovieDetails()
                 loadReviews()
             }
@@ -151,9 +163,13 @@ class MovieDetailActivity : AppCompatActivity() {
     }
 
     private fun loadReviews() {
+        Log.d(TAG, "Loading reviews for movie: ${movie.id}")
+
         lifecycleScope.launch {
             try {
                 val reviews = firebaseManager.getMovieReviews(movie.id)
+                Log.d(TAG, "Loaded ${reviews.size} reviews")
+
                 reviewAdapter.submitList(reviews)
 
                 // Update review count
@@ -161,7 +177,9 @@ class MovieDetailActivity : AppCompatActivity() {
                 binding.tvReviewCount.text = "(${movie.totalReviews} user reviews)"
 
                 binding.tvNoReviews.visibility = if (reviews.isEmpty()) View.VISIBLE else View.GONE
+                binding.reviewsRecyclerView.visibility = if (reviews.isEmpty()) View.GONE else View.VISIBLE
             } catch (e: Exception) {
+                Log.e(TAG, "Error loading reviews", e)
                 Toast.makeText(
                     this@MovieDetailActivity,
                     "Error loading reviews: ${e.message}",
@@ -179,9 +197,10 @@ class MovieDetailActivity : AppCompatActivity() {
                 userRating = firebaseManager.getUserRating(movie.id)
                 userRating?.let { rating ->
                     binding.btnRate.text = "Your Rating: ⭐ ${String.format("%.1f", rating)}"
+                    Log.d(TAG, "User rating loaded: $rating")
                 }
             } catch (e: Exception) {
-                // Handle error silently
+                Log.e(TAG, "Error loading user rating", e)
             }
         }
     }
@@ -193,8 +212,9 @@ class MovieDetailActivity : AppCompatActivity() {
             try {
                 isInWatchlist = firebaseManager.isInWatchlist(movie.id)
                 updateWatchlistButton()
+                Log.d(TAG, "Watchlist status: $isInWatchlist")
             } catch (e: Exception) {
-                // Handle error silently
+                Log.e(TAG, "Error checking watchlist status", e)
             }
         }
     }
@@ -227,7 +247,9 @@ class MovieDetailActivity : AppCompatActivity() {
                 userRating = rating
                 binding.btnRate.text = "Your Rating: ⭐ ${String.format("%.1f", rating)}"
                 Toast.makeText(this@MovieDetailActivity, "Rating submitted!", Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "Rating submitted: $rating")
             } catch (e: Exception) {
+                Log.e(TAG, "Error submitting rating", e)
                 Toast.makeText(
                     this@MovieDetailActivity,
                     "Error submitting rating: ${e.message}",
@@ -262,6 +284,8 @@ class MovieDetailActivity : AppCompatActivity() {
     private fun submitReview(rating: Double, reviewText: String) {
         val user = firebaseManager.getCurrentUser() ?: return
 
+        Log.d(TAG, "Submitting review for movie: ${movie.id}")
+
         lifecycleScope.launch {
             try {
                 val userData = firebaseManager.getUserData(user.uid)
@@ -280,8 +304,12 @@ class MovieDetailActivity : AppCompatActivity() {
 
                 firebaseManager.addReview(review)
                 Toast.makeText(this@MovieDetailActivity, "Review submitted!", Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "Review submitted successfully")
+
+                // Reload reviews to show the new one
                 loadReviews()
             } catch (e: Exception) {
+                Log.e(TAG, "Error submitting review", e)
                 Toast.makeText(
                     this@MovieDetailActivity,
                     "Error submitting review: ${e.message}",
@@ -307,6 +335,7 @@ class MovieDetailActivity : AppCompatActivity() {
                 }
                 loadReviews()
             } catch (e: Exception) {
+                Log.e(TAG, "Error toggling like", e)
                 Toast.makeText(
                     this@MovieDetailActivity,
                     "Error: ${e.message}",
@@ -327,6 +356,7 @@ class MovieDetailActivity : AppCompatActivity() {
                         Toast.makeText(this@MovieDetailActivity, "Review deleted", Toast.LENGTH_SHORT).show()
                         loadReviews()
                     } catch (e: Exception) {
+                        Log.e(TAG, "Error deleting review", e)
                         Toast.makeText(
                             this@MovieDetailActivity,
                             "Error deleting review: ${e.message}",
@@ -362,8 +392,10 @@ class MovieDetailActivity : AppCompatActivity() {
                         if (isInWatchlist) "Added to watchlist" else "Removed from watchlist",
                         Toast.LENGTH_SHORT
                     ).show()
+                    Log.d(TAG, "Watchlist updated: $isInWatchlist")
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "Error updating watchlist", e)
                 Toast.makeText(
                     this@MovieDetailActivity,
                     "Error: ${e.message}",
@@ -371,5 +403,13 @@ class MovieDetailActivity : AppCompatActivity() {
                 ).show()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh data when returning to this screen
+        loadReviews()
+        checkWatchlistStatus()
+        loadUserRating()
     }
 }

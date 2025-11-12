@@ -2,6 +2,7 @@ package com.example.starstack
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -19,6 +20,7 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var binding: ActivityProfileBinding
     private val firebaseManager = FirebaseManager.getInstance()
     private lateinit var reviewAdapter: ReviewAdapter
+    private val TAG = "ProfileActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,13 +60,17 @@ class ProfileActivity : AppCompatActivity() {
             return
         }
 
+        Log.d(TAG, "Loading profile for user: ${currentUser.uid}")
         showLoading(true)
+
         lifecycleScope.launch {
             try {
                 val userData = firebaseManager.getUserData(currentUser.uid)
+                Log.d(TAG, "User data loaded: ${userData?.displayName}")
                 displayUserData(userData)
                 loadUserReviews(currentUser.uid)
             } catch (e: Exception) {
+                Log.e(TAG, "Error loading profile", e)
                 Toast.makeText(
                     this@ProfileActivity,
                     "Error loading profile: ${e.message}",
@@ -95,6 +101,8 @@ class ProfileActivity : AppCompatActivity() {
             return
         }
 
+        Log.d(TAG, "Displaying user data - Reviews: ${user.totalReviews}, Watchlist: ${user.watchlistCount}")
+
         binding.apply {
             tvUserName.text = user.displayName.ifEmpty { "User" }
             tvUserEmail.text = user.email
@@ -111,9 +119,13 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun loadUserReviews(userId: String) {
+        Log.d(TAG, "Loading reviews for user: $userId")
+
         lifecycleScope.launch {
             try {
                 val reviews = firebaseManager.getUserReviews(userId)
+                Log.d(TAG, "Loaded ${reviews.size} reviews")
+
                 reviewAdapter.submitList(reviews)
 
                 if (reviews.isEmpty()) {
@@ -125,11 +137,15 @@ class ProfileActivity : AppCompatActivity() {
                     binding.reviewsRecyclerView.visibility = View.VISIBLE
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "Error loading reviews", e)
                 Toast.makeText(
                     this@ProfileActivity,
                     "Error loading reviews: ${e.message}",
                     Toast.LENGTH_SHORT
                 ).show()
+                binding.tvNoReviews.visibility = View.VISIBLE
+                binding.tvNoReviews.text = "Error loading reviews"
+                binding.reviewsRecyclerView.visibility = View.GONE
             }
         }
     }
@@ -205,6 +221,7 @@ class ProfileActivity : AppCompatActivity() {
                 Toast.makeText(this@ProfileActivity, "Profile updated", Toast.LENGTH_SHORT).show()
                 loadUserProfile()
             } catch (e: Exception) {
+                Log.e(TAG, "Error updating profile", e)
                 Toast.makeText(
                     this@ProfileActivity,
                     "Error updating profile: ${e.message}",
@@ -226,6 +243,7 @@ class ProfileActivity : AppCompatActivity() {
                         firebaseManager.getCurrentUser()?.uid?.let { loadUserReviews(it) }
                         loadUserProfile()
                     } catch (e: Exception) {
+                        Log.e(TAG, "Error deleting review", e)
                         Toast.makeText(
                             this@ProfileActivity,
                             "Error: ${e.message}",
@@ -241,5 +259,9 @@ class ProfileActivity : AppCompatActivity() {
     private fun showLoading(show: Boolean) {
         binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
     }
-}
 
+    override fun onResume() {
+        super.onResume()
+        loadUserProfile()
+    }
+}

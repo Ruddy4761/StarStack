@@ -5,8 +5,6 @@ import com.example.starstack.api.OMDbMovieDetails
 import com.example.starstack.api.OMDbRetrofitClient
 import com.example.starstack.api.OMDbSearchResult
 import com.example.starstack.models.Movie
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 class OMDbMovieRepository {
 
@@ -24,72 +22,64 @@ class OMDbMovieRepository {
     )
 
     suspend fun getPopularMovies(): List<OMDbSearchResult> {
-        return withContext(Dispatchers.IO) {
-            val movies = mutableListOf<OMDbSearchResult>()
+        val movies = mutableListOf<OMDbSearchResult>()
 
-            // Search for each popular movie
-            popularMovieTitles.forEach { title ->
-                try {
-                    val response = api.searchMovies(apiKey, title, page = 1)
-                    if (response.Response == "True" && !response.Search.isNullOrEmpty()) {
-                        movies.add(response.Search[0]) // Add first result
-                    }
-                } catch (e: Exception) {
-                    Log.e("OMDbRepository", "Error fetching $title", e)
+        // Search for each popular movie
+        popularMovieTitles.forEach { title ->
+            try {
+                val response = api.searchMovies(apiKey, title, page = 1)
+                if (response.Response == "True" && !response.Search.isNullOrEmpty()) {
+                    movies.add(response.Search[0]) // Add first result
                 }
+            } catch (e: Exception) {
+                Log.e("OMDbRepository", "Error fetching $title", e)
             }
-
-            movies
         }
+
+        return movies
     }
 
     suspend fun searchMovies(query: String, page: Int = 1): List<OMDbSearchResult> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val response = api.searchMovies(apiKey, query, page = page)
-                if (response.Response == "True") {
-                    response.Search ?: emptyList()
-                } else {
-                    Log.e("OMDbRepository", "Search error: ${response.Error}")
-                    emptyList()
-                }
-            } catch (e: Exception) {
-                Log.e("OMDbRepository", "Error searching movies", e)
+        return try {
+            val response = api.searchMovies(apiKey, query, page = page)
+            if (response.Response == "True") {
+                response.Search ?: emptyList()
+            } else {
+                Log.e("OMDbRepository", "Search error: ${response.Error}")
                 emptyList()
             }
+        } catch (e: Exception) {
+            Log.e("OMDbRepository", "Error searching movies", e)
+            emptyList()
         }
     }
 
     suspend fun getMovieDetails(imdbId: String): OMDbMovieDetails? {
-        return withContext(Dispatchers.IO) {
-            try {
-                val details = api.getMovieDetails(apiKey, imdbId = imdbId)
-                if (details.Response == "True") {
-                    details
-                } else {
-                    Log.e("OMDbRepository", "Details error: ${details.Error}")
-                    null
-                }
-            } catch (e: Exception) {
-                Log.e("OMDbRepository", "Error fetching details", e)
+        return try {
+            val details = api.getMovieDetails(apiKey, imdbId = imdbId)
+            if (details.Response == "True") {
+                details
+            } else {
+                Log.e("OMDbRepository", "Details error: ${details.Error}")
                 null
             }
+        } catch (e: Exception) {
+            Log.e("OMDbRepository", "Error fetching details for $imdbId", e)
+            null
         }
     }
 
     suspend fun getMovieDetailsByTitle(title: String): OMDbMovieDetails? {
-        return withContext(Dispatchers.IO) {
-            try {
-                val details = api.getMovieDetails(apiKey, title = title)
-                if (details.Response == "True") {
-                    details
-                } else {
-                    null
-                }
-            } catch (e: Exception) {
-                Log.e("OMDbRepository", "Error fetching details by title", e)
+        return try {
+            val details = api.getMovieDetails(apiKey, title = title)
+            if (details.Response == "True") {
+                details
+            } else {
                 null
             }
+        } catch (e: Exception) {
+            Log.e("OMDbRepository", "Error fetching details by title", e)
+            null
         }
     }
 
