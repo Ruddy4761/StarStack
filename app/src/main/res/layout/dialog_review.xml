@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
+    android:fitsSystemWindows="true"
     android:padding="24dp">
 
     <RatingBar
@@ -14,17 +15,18 @@
         android:stepSize="0.5"
         android:rating="0"/>
 
-    <EditText
-        android:id="@+id/etReviewText"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:hint="Write your review..."
-        android:gravity="top|start"
-        android:padding="12dp"
-        android:background="@drawable/search_bg"
-        android:textColor="@color/dark_text_primary"
-        android:textColorHint="@color/dark_text_secondary"
-        android:inputType="textMultiLine|textCapSentences"/>
+        android:hint="Write your review...">
 
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etReviewText"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:gravity="top|start"
+            android:inputType="textMultiLine|textCapSentences"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
 </LinearLayout>

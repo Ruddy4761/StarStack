@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="2dp"
-    app:cardBackgroundColor="@color/dark_card">
+    android:fitsSystemWindows="true"
+    style="@style/Widget.Material3.CardView.Outlined">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,19 +14,19 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- User Info & Rating -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <ImageView
+            <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/ivUserPhoto"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@android:drawable/ic_menu_myplaces"
-                android:background="@drawable/circle_background"/>
+                android:src="@drawable/ic_profile"
+                android:background="?attr/colorSurfaceVariant"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"/>
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -39,18 +39,18 @@
                     android:id="@+id/tvUserName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="User Name"
+                    tools:text="User Name"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:textColor="@color/dark_text_primary"/>
+                    android:textColor="?attr/colorOnSurface"/>
 
                 <TextView
                     android:id="@+id/tvTimestamp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="2 hours ago"
+                    tools:text="2 hours ago"
                     android:textSize="12sp"
-                    android:textColor="@color/dark_text_secondary"/>
+                    android:textColor="?attr/colorOnSurfaceVariant"/>
 
             </LinearLayout>
 
@@ -58,25 +58,25 @@
                 android:id="@+id/tvRating"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⭐ 4.5"
+                tools:text="4.5"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@color/dark_accent"/>
+                android:textColor="?attr/colorOnSurface"
+                app:drawableStartCompat="@drawable/ic_star_filled"
+                android:drawablePadding="4dp"/>
 
         </LinearLayout>
 
-        <!-- Review Text -->
         <TextView
             android:id="@+id/tvReviewText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="This is the review text..."
+            tools:text="This is the review text... It was a fantastic movie, and I would highly recommend it to anyone who likes action and sci-fi."
             android:textSize="14sp"
-            android:textColor="@color/dark_text_primary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_marginTop="12dp"
             android:lineSpacingExtra="4dp"/>
 
-        <!-- Actions -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -84,24 +84,24 @@
             android:layout_marginTop="12dp"
             android:gravity="center_vertical">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLike"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="🤍"
-                android:textSize="16sp"
-                android:paddingHorizontal="12dp"
-                android:backgroundTint="@android:color/transparent"
-                android:textColor="@color/dark_text_primary"
-                style="@style/Widget.Material3.Button.TextButton"/>
+                android:layout_height="wrap_content"
+                app:icon="@drawable/ic_like"
+                app:iconTint="?attr/colorOnSurfaceVariant"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:paddingStart="12dp"
+                android:paddingEnd="0dp"/>
 
             <TextView
                 android:id="@+id/tvLikes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0 likes"
+                tools:text="0 likes"
                 android:textSize="12sp"
-                android:textColor="@color/dark_text_secondary"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:layout_marginStart="4dp"/>
 
             <View
@@ -109,20 +109,20 @@
                 android:layout_height="1dp"
                 android:layout_weight="1"/>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDelete"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="wrap_content"
                 android:text="Delete"
+                app:icon="@drawable/ic_delete"
+                android:textColor="?attr/colorError"
+                app:iconTint="?attr/colorError"
                 android:textSize="12sp"
-                android:paddingHorizontal="12dp"
-                android:backgroundTint="@android:color/transparent"
-                android:textColor="#FF5252"
                 android:visibility="gone"
+                tools:visibility="visible"
                 style="@style/Widget.Material3.Button.TextButton"/>
 
         </LinearLayout>
-
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

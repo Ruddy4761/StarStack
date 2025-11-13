@@ -1,111 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="8dp"
-    app:cardBackgroundColor="@color/dark_card">
+    android:fitsSystemWindows="true"
+    style="@style/Widget.Material3.CardView.Filled"
+    app:cardBackgroundColor="?attr/colorSurfaceVariant"
+    app:cardElevation="0dp"
+    app:cardCornerRadius="16dp">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/ivPoster"
+            android:layout_width="match_parent"
+            android:layout_height="260dp"
+            android:scaleType="centerCrop"
+            android:background="?attr/colorSurfaceVariant"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Large"
+            tools:src="@drawable/ic_launcher_foreground"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="12dp">
 
-            <!-- Movie Poster -->
-            <FrameLayout
+            <TextView
+                android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
-                android:layout_height="280dp">
+                android:layout_height="wrap_content"
+                tools:text="Movie Title"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
+                android:maxLines="1"
+                android:ellipsize="end"/>
 
-                <ImageView
-                    android:id="@+id/ivPoster"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
-                    android:background="@color/dark_background"/>
+            <TextView
+                android:id="@+id/tvGenre"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Action"
+                android:textSize="12sp"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:layout_marginTop="4dp"/>
 
-                <!-- Gradient overlay for better text visibility -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="80dp"
-                    android:layout_gravity="bottom"
-                    android:background="@drawable/gradient_overlay"/>
-
-            </FrameLayout>
-
-            <!-- Movie Info -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp">
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center_vertical">
 
                 <TextView
-                    android:id="@+id/tvTitle"
-                    android:layout_width="match_parent"
+                    android:id="@+id/tvYear"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Movie Title"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/dark_text_primary"
-                    android:maxLines="2"
-                    android:ellipsize="end"/>
+                    android:layout_weight="1"
+                    tools:text="2024"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"/>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="6dp"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:id="@+id/tvYear"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="2024"
-                        android:textSize="12sp"
-                        android:textColor="@color/dark_text_secondary"/>
-
-                    <ImageView
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
-                        android:src="@android:drawable/star_big_on"
-                        android:tint="@color/rating_star"
-                        android:layout_marginEnd="4dp"/>
-
-                    <TextView
-                        android:id="@+id/tvRating"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="4.5"
-                        android:textSize="13sp"
-                        android:textColor="@color/rating_star"
-                        android:textStyle="bold"/>
-
-                </LinearLayout>
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_star_filled"
+                    android:layout_marginEnd="4dp"/>
 
                 <TextView
-                    android:id="@+id/tvGenre"
+                    android:id="@+id/tvRating"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Action"
-                    android:textSize="11sp"
-                    android:textColor="@color/white"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/genre_badge"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="4dp"/>
-
+                    tools:text="4.5"
+                    android:textSize="13sp"
+                    android:textColor="@color/rating_star"
+                    android:textStyle="bold"/>
             </LinearLayout>
-
         </LinearLayout>
-
-    </FrameLayout>
-
+    </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

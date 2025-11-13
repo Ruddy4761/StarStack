@@ -1,51 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:fitsSystemWindows="true"
     android:layout_height="match_parent"
-    android:background="@color/dark_background">
+    android:background="?attr/colorSurface">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/dark_background">
+        android:background="?attr/colorSurface"
+        app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/dark_background"
-            app:titleTextColor="@color/dark_text_primary"/>
+            app:navigationIcon="@drawable/ic_back"
+            app:titleTextColor="?attr/colorOnSurface"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:clipToPadding="false"
+        android:paddingBottom="100dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Movie Header -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:padding="16dp">
 
-                <!-- Poster -->
-                <ImageView
+                <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/ivPoster"
-                    android:layout_width="120dp"
-                    android:layout_height="180dp"
+                    android:layout_width="130dp"
+                    android:layout_height="195dp"
                     android:scaleType="centerCrop"
-                    android:background="@color/dark_card"
-                    android:src="@drawable/ic_launcher_foreground"/>
+                    android:background="?attr/colorSurfaceVariant"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Large"
+                    tools:src="@drawable/ic_launcher_foreground"/>
 
-                <!-- Info -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -57,37 +60,70 @@
                         android:id="@+id/tvTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Movie Title"
                         android:textSize="24sp"
                         android:textStyle="bold"
-                        android:textColor="@color/dark_text_primary"/>
+                        android:textColor="?attr/colorOnSurface"
+                        tools:text="Movie Title"/>
 
                     <TextView
                         android:id="@+id/tvYear"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="2024"
-                        android:textSize="14sp"
-                        android:textColor="@color/dark_text_secondary"
-                        android:layout_marginTop="4dp"/>
+                        android:textSize="16sp"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:layout_marginTop="4dp"
+                        tools:text="2024"/>
 
                     <TextView
                         android:id="@+id/tvDirector"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Director"
                         android:textSize="14sp"
-                        android:textColor="@color/dark_text_secondary"
-                        android:layout_marginTop="4dp"/>
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:layout_marginTop="8dp"
+                        tools:text="Directed by Christopher Nolan"/>
 
                     <TextView
                         android:id="@+id/tvDuration"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="120 min"
                         android:textSize="14sp"
-                        android:textColor="@color/dark_text_secondary"
-                        android:layout_marginTop="4dp"/>
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:layout_marginTop="4dp"
+                        tools:text="148 min"/>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="12dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_star_filled"
+                            android:layout_marginEnd="4dp"/>
+
+                        <TextView
+                            android:id="@+id/tvRating"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            tools:text="4.8"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/colorOnSurface"/>
+
+                        <TextView
+                            android:id="@+id/tvReviewCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            tools:text="(1.2k reviews)"
+                            android:textSize="12sp"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:layout_marginStart="4dp"/>
+
+                    </LinearLayout>
 
                     <RatingBar
                         android:id="@+id/ratingBar"
@@ -96,91 +132,63 @@
                         android:numStars="5"
                         android:stepSize="0.1"
                         android:isIndicator="true"
-                        android:scaleX="0.8"
-                        android:scaleY="0.8"
-                        android:transformPivotX="0dp"
-                        android:layout_marginTop="8dp"
-                        style="@style/Widget.AppCompat.RatingBar.Small"/>
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:id="@+id/tvRating"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="4.5"
-                            android:textSize="18sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/dark_accent"/>
-
-                        <TextView
-                            android:id="@+id/tvReviewCount"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="(0 reviews)"
-                            android:textSize="12sp"
-                            android:textColor="@color/dark_text_secondary"
-                            android:layout_marginStart="4dp"/>
-
-                    </LinearLayout>
+                        android:layout_marginTop="4dp"
+                        style="@style/Widget.AppCompat.RatingBar.Small"
+                        android:theme="@style/Widget.AppCompat.RatingBar.Small"/>
 
                 </LinearLayout>
-
             </LinearLayout>
 
-            <!-- Genres -->
             <TextView
                 android:id="@+id/tvGenres"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Action • Thriller • Drama"
                 android:textSize="14sp"
-                android:textColor="@color/dark_accent"
+                android:textColor="?attr/colorOnTertiaryContainer"
                 android:paddingHorizontal="16dp"
-                android:paddingVertical="8dp"/>
+                android:paddingBottom="8dp"
+                tools:text="Action • Thriller • Drama"/>
 
-            <!-- Action Buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:padding="16dp">
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnWatchlist"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="+ Add to Watchlist"
-                    android:textSize="12sp"
-                    app:cornerRadius="12dp"
+                    android:textSize="14sp"
+                    app:icon="@drawable/ic_watchlist"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp"
                     style="@style/Widget.Material3.Button.TonalButton"/>
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnRate"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Rate Movie"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
                     android:layout_marginStart="8dp"
-                    app:cornerRadius="12dp"
+                    app:icon="@drawable/ic_star_filled"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp"
+                    app:iconTint="@color/rating_star"
                     style="@style/Widget.Material3.Button.TonalButton"/>
-
             </LinearLayout>
 
-            <!-- Description -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Synopsis"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@color/dark_text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:paddingHorizontal="16dp"
                 android:paddingTop="8dp"/>
 
@@ -188,21 +196,20 @@
                 android:id="@+id/tvDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Movie description goes here..."
                 android:textSize="14sp"
-                android:textColor="@color/dark_text_secondary"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:lineSpacingExtra="4dp"
                 android:paddingHorizontal="16dp"
-                android:paddingVertical="8dp"/>
+                android:paddingVertical="8dp"
+                tools:text="Movie description goes here..."/>
 
-            <!-- Cast -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Cast"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@color/dark_text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:paddingHorizontal="16dp"
                 android:paddingTop="8dp"/>
 
@@ -210,31 +217,21 @@
                 android:id="@+id/tvCast"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Actor 1, Actor 2, Actor 3"
+                tools:text="Actor 1, Actor 2, Actor 3"
                 android:textSize="14sp"
-                android:textColor="@color/dark_text_secondary"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="8dp"/>
 
-            <!-- Reviews Section -->
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
+                android:text="Reviews"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
                 android:paddingHorizontal="16dp"
-                android:paddingTop="16dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Reviews"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/dark_text_primary"/>
-
-            </LinearLayout>
+                android:paddingTop="16dp"/>
 
             <TextView
                 android:id="@+id/tvNoReviews"
@@ -242,7 +239,7 @@
                 android:layout_height="wrap_content"
                 android:text="No reviews yet. Be the first to review!"
                 android:textSize="14sp"
-                android:textColor="@color/dark_text_secondary"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:gravity="center"
                 android:padding="32dp"
                 android:visibility="gone"/>
@@ -252,21 +249,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
-                android:paddingBottom="80dp"
-                android:clipToPadding="false"/>
-
+                android:clipToPadding="false"
+                android:paddingHorizontal="8dp"/>
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Floating Action Button -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fabAddReview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:src="@android:drawable/ic_input_add"
-        app:tint="@android:color/white"/>
+        android:text="Write Review"
+        android:textColor="?attr/colorOnPrimary"
+        app:icon="@drawable/ic_add"
+        app:iconTint="?attr/colorOnPrimary"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

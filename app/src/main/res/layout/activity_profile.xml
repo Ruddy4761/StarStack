@@ -1,27 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:fitsSystemWindows="true"
     android:layout_height="match_parent"
-    android:background="@color/dark_background">
+    android:background="?attr/colorSurface">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/dark_background">
+        android:background="?attr/colorSurface"
+        app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:titleTextColor="@color/dark_text_primary"/>
+            app:navigationIcon="@drawable/ic_back"
+            app:titleTextColor="?attr/colorOnSurface"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -29,151 +35,145 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Profile Header -->
-            <com.google.android.material.card.MaterialCardView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="16dp"
-                app:cardBackgroundColor="@color/dark_card"
-                app:cardElevation="4dp">
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:gravity="center_horizontal"
+                android:background="@drawable/bg_search_input">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/ivProfileImage"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:src="@drawable/ic_profile"
+                    android:padding="24dp"
+                    android:background="?attr/colorSurface"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"/>
+
+                <TextView
+                    android:id="@+id/tvUserName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="User Name"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginTop="16dp"/>
+
+                <TextView
+                    android:id="@+id/tvUserEmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="user@email.com"
+                    android:textSize="14sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_marginTop="4dp"/>
+
+                <TextView
+                    android:id="@+id/tvBio"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:text="This is a user bio. It can be a few lines long."
+                    android:textSize="14sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:gravity="center"
+                    android:layout_marginTop="12dp"
+                    android:visibility="gone"
+                    tools:visibility="visible"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp"
-                    android:gravity="center_horizontal">
+                    android:orientation="horizontal"
+                    android:layout_marginTop="24dp"
+                    android:gravity="center">
 
-                    <ImageView
-                        android:id="@+id/ivProfileImage"
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
-                        android:src="@android:drawable/ic_menu_myplaces"
-                        android:background="@drawable/circle_background"/>
-
-                    <TextView
-                        android:id="@+id/tvUserName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="User Name"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/dark_text_primary"
-                        android:layout_marginTop="12dp"/>
-
-                    <TextView
-                        android:id="@+id/tvUserEmail"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="user@email.com"
-                        android:textSize="14sp"
-                        android:textColor="@color/dark_text_secondary"
-                        android:layout_marginTop="4dp"/>
-
-                    <TextView
-                        android:id="@+id/tvBio"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Bio goes here"
-                        android:textSize="14sp"
-                        android:textColor="@color/dark_text_secondary"
-                        android:gravity="center"
-                        android:layout_marginTop="8dp"
-                        android:visibility="gone"/>
-
-                    <!-- Stats -->
                     <LinearLayout
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
                         android:gravity="center">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
+                        <TextView
+                            android:id="@+id/tvReviewCount"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:gravity="center">
-
-                            <TextView
-                                android:id="@+id/tvReviewCount"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0 Reviews"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/dark_accent"/>
-
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="1dp"
-                            android:layout_height="40dp"
-                            android:background="@color/dark_text_secondary"/>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
+                            tools:text="12"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/colorPrimary"/>
+                        <TextView
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:gravity="center">
-
-                            <TextView
-                                android:id="@+id/tvWatchlistCount"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0 Movies"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/dark_accent"/>
-
-                        </LinearLayout>
-
+                            android:text="Reviews"
+                            android:textSize="12sp"
+                            android:textColor="?attr/colorOnSurfaceVariant"/>
                     </LinearLayout>
 
-                    <!-- Action Buttons -->
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:background="?attr/colorOutline"/>
+
                     <LinearLayout
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="16dp">
-
-                        <Button
-                            android:id="@+id/btnEditProfile"
-                            android:layout_width="0dp"
-                            android:layout_height="48dp"
-                            android:layout_weight="1"
-                            android:text="Edit Profile"
-                            android:textSize="14sp"
-                            app:cornerRadius="12dp"
-                            style="@style/Widget.Material3.Button.TonalButton"/>
-
-                        <Button
-                            android:id="@+id/btnSignOut"
-                            android:layout_width="0dp"
-                            android:layout_height="48dp"
-                            android:layout_weight="1"
-                            android:text="Sign Out"
-                            android:textSize="14sp"
-                            android:layout_marginStart="8dp"
-                            app:cornerRadius="12dp"
-                            style="@style/Widget.Material3.Button.OutlinedButton"/>
-
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <TextView
+                            android:id="@+id/tvWatchlistCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            tools:text="5"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/colorPrimary"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Watchlist"
+                            android:textSize="12sp"
+                            android:textColor="?attr/colorOnSurfaceVariant"/>
                     </LinearLayout>
 
                 </LinearLayout>
 
-            </com.google.android.material.card.MaterialCardView>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="24dp">
 
-            <!-- Reviews Section -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnEditProfile"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Edit Profile"
+                        style="@style/Widget.Material3.Button.TonalButton"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSignOut"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Sign Out"
+                        android:layout_marginStart="8dp"
+                        style="@style/Widget.Material3.Button.OutlinedButton"/>
+
+                </LinearLayout>
+            </LinearLayout>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="My Reviews"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@color/dark_text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginTop="24dp"
                 android:layout_marginBottom="8dp"/>
 
@@ -183,7 +183,7 @@
                 android:layout_height="wrap_content"
                 android:text="No reviews yet"
                 android:textSize="14sp"
-                android:textColor="@color/dark_text_secondary"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:gravity="center"
                 android:padding="32dp"
                 android:visibility="gone"/>
@@ -192,10 +192,11 @@
                 android:id="@+id/reviewsRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"/>
+                android:nestedScrollingEnabled="false"
+                android:clipToPadding="false"
+                android:paddingHorizontal="-8dp"/>
 
         </LinearLayout>
-
     </androidx.core.widget.NestedScrollView>
 
     <ProgressBar

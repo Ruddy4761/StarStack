@@ -1,16 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark theme colors -->
-    <color name="dark_background">#0F0F0F</color>
-    <color name="dark_card">#1A1A1A</color>
-    <color name="dark_text_primary">#FFFFFF</color>
-    <color name="dark_text_secondary">#B3B3B3</color>
-    <color name="dark_accent">#E50914</color>
-    <color name="dark_accent_light">#FF1F2F</color>
-    <color name="dark_search_bg">#2C2C2C</color>
+    <color name="primary_light">#00639B</color>
+    <color name="on_primary_light">#FFFFFF</color>
+    <color name="primary_container_light">#CDE5FF</color>
+    <color name="on_primary_container_light">#001D33</color>
 
-    <!-- Additional colors -->
-    <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>
-    <color name="gold">#FFD700</color>
-    <color name="rating_star">#FFC107</color>
+    <color name="secondary_light">#51606F</color>
+    <color name="on_secondary_light">#FFFFFF</color>
+    <color name="secondary_container_light">#D4E4F6</color>
+    <color name="on_secondary_container_light">#0E1D2A</color>
+
+    <color name="tertiary_light">#67587B</color>
+    <color name="on_tertiary_light">#FFFFFF</color>
+    <color name="tertiary_container_light">#EEDCFF</color>
+    <color name="on_tertiary_container_light">#221534</color>
+
+    <color name="error_light">#BA1A1A</color>
+    <color name="on_error_light">#FFFFFF</color>
+    <color name="error_container_light">#FFDAD6</color>
+    <color name="on_error_container_light">#410002</color>
+
+    <color name="background_light">#FDFCFF</color>
+    <color name="on_background_light">#1A1C1E</color>
+    <color name="surface_light">#FDFCFF</color>
+    <color name="on_surface_light">#1A1C1E</color>
+
+    <color name="surface_variant_light">#DEE3EB</color>
+    <color name="on_surface_variant_light">#42474E</color>
+    <color name="outline_light">#72777F</color>
+    <color name="scrim_light">#000000</color>
+
+    <color name="rating_star">#FFB300</color>
+
+    <!-- Added missing dark theme colors -->
+    <color name="dark_card">#1E1E1E</color>
+    <color name="dark_text_primary">#FFFFFF</color>
+    <color name="dark_text_secondary">#BDBDBD</color>
+    <color name="dark_accent">#82B1FF</color>
+    <color name="like_red">#FF0000</color>
 </resources>

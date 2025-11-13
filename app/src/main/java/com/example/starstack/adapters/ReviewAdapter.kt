@@ -3,9 +3,11 @@ package com.example.starstack.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.starstack.R
 import com.example.starstack.databinding.ItemReviewBinding
 import com.example.starstack.models.Review
 import java.text.SimpleDateFormat
@@ -37,7 +39,7 @@ class ReviewAdapter(
         fun bind(review: Review) {
             binding.apply {
                 tvUserName.text = review.userName
-                tvRating.text = "⭐ ${String.format("%.1f", review.rating)}"
+                tvRating.text = String.format("%.1f", review.rating)
                 tvReviewText.text = review.reviewText
                 tvTimestamp.text = formatDate(review.timestamp.toDate())
                 tvLikes.text = "${review.likes} likes"
@@ -51,7 +53,13 @@ class ReviewAdapter(
 
                 // Update like button state
                 val isLiked = currentUserId?.let { review.likedBy.contains(it) } ?: false
-                btnLike.text = if (isLiked) "❤️" else "🤍"
+                if (isLiked) {
+                    btnLike.setIconResource(R.drawable.ic_like_filled)
+                    btnLike.setIconTintResource(R.color.like_red) // Use a red color
+                } else {
+                    btnLike.setIconResource(R.drawable.ic_like)
+                    btnLike.iconTint = null
+                }
 
                 btnLike.setOnClickListener {
                     onLikeClick(review)
@@ -69,9 +77,9 @@ class ReviewAdapter(
 
             return when {
                 diff < 60000 -> "Just now"
-                diff < 3600000 -> "${diff / 60000} minutes ago"
-                diff < 86400000 -> "${diff / 3600000} hours ago"
-                diff < 604800000 -> "${diff / 86400000} days ago"
+                diff < 3600000 -> "${diff / 60000}m ago"
+                diff < 86400000 -> "${diff / 3600000}h ago"
+                diff < 604800000 -> "${diff / 86400000}d ago"
                 else -> SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(date)
             }
         }
