@@ -38,4 +38,30 @@
     <color name="dark_text_secondary">#BDBDBD</color>
     <color name="dark_accent">#82B1FF</color>
     <color name="like_red">#FF0000</color>
+
+    <!-- Added matching dark theme colors to base to satisfy lint -->
+    <color name="primary_dark">#97CBFF</color>
+    <color name="on_primary_dark">#003353</color>
+    <color name="primary_container_dark">#004B76</color>
+    <color name="on_primary_container_dark">#CDE5FF</color>
+    <color name="secondary_dark">#B8C8DA</color>
+    <color name="on_secondary_dark">#233240</color>
+    <color name="secondary_container_dark">#3A4857</color>
+    <color name="on_secondary_container_dark">#D4E4F6</color>
+    <color name="tertiary_dark">#D2BFE8</color>
+    <color name="on_tertiary_dark">#382A4A</color>
+    <color name="tertiary_container_dark">#4F4162</color>
+    <color name="on_tertiary_container_dark">#EEDCFF</color>
+    <color name="error_dark">#FFB4AB</color>
+    <color name="on_error_dark">#690005</color>
+    <color name="error_container_dark">#93000A</color>
+    <color name="on_error_container_dark">#FFDAD6</color>
+    <color name="background_dark">#1A1C1E</color>
+    <color name="on_background_dark">#E2E2E6</color>
+    <color name="surface_dark">#1A1C1E</color>
+    <color name="on_surface_dark">#E2E2E6</color>
+    <color name="surface_variant_dark">#42474E</color>
+    <color name="on_surface_variant_dark">#C2C7CE</color>
+    <color name="outline_dark">#8C9199</color>
+    <color name="scrim_dark">#000000</color>
 </resources>
